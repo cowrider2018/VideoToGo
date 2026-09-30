@@ -1,6 +1,13 @@
 import { repLabel } from '../lib/dash.js';
 import { audioFor, variantLabel } from '../lib/hls.js';
+import { localize, t } from '../lib/i18n.js';
 import { displayName, filenameFor, formatBytes, imageFilename } from '../lib/media.js';
+
+// The window's own text, in the browser's language.
+document.documentElement.lang = chrome.i18n.getUILanguage();
+for (const el of document.querySelectorAll('[data-i18n]')) el.textContent = t(el.dataset.i18n);
+for (const el of document.querySelectorAll('[data-i18n-title]')) el.title = t(el.dataset.i18nTitle);
+for (const el of document.querySelectorAll('[data-i18n-placeholder]')) el.placeholder = t(el.dataset.i18nPlaceholder);
 
 const tab = await chrome.tabs.getCurrent();
 const mediaKey = `tab:${tab.id}`;
@@ -64,7 +71,7 @@ function applyPage(p = {}) {
   const changed = p.url !== page.url || p.title !== page.title;
   page = p;
   if (changed) renderMedia();
-  document.title = page.title || 'Video Downloader';
+  document.title = page.title || t('extName');
   if (!editing && page.url) addr.value = page.url;
 }
 
@@ -144,16 +151,16 @@ function formatDuration(sec) {
   return hh ? `${hh}:${String(mm).padStart(2, '0')}:${ss}` : `${mm}:${ss}`;
 }
 
-// A row's button says "已加入" for a moment after it queued something.
+// A row's button says "Added" for a moment after it queued something.
 const queuedAt = new Map();
 
-function queueButton(key, start, text = '下載') {
+function queueButton(key, start, text = t('download')) {
   const left = 1500 - (Date.now() - (queuedAt.get(key) || 0));
   if (left > 0) {
     // Whichever render shows the notice also takes it down; a row rebuilt later (after
     // navigating back) would otherwise keep it until something else re-renders.
     setTimeout(renderMedia, left + 50);
-    return { text: '已加入', disabled: true };
+    return { text: t('added'), disabled: true };
   }
   return {
     text,
@@ -161,7 +168,7 @@ function queueButton(key, start, text = '下載') {
       queuedAt.set(key, Date.now());
       renderMedia();
       const res = await start();
-      if (res?.error) alert(res.error);
+      if (res?.error) alert(localize(res.error));
     },
   };
 }
@@ -169,7 +176,7 @@ function queueButton(key, start, text = '下載') {
 function startHls(m, url, tag, audio) {
   const base = { type: 'download-hls', tabId: tab.id, mediaId: m.id, title: titleForFiles() };
   const video = send({ ...base, url, tag });
-  if (audio) send({ ...base, url: audio.url, tag: `音訊${audio.language ? ` ${audio.language}` : ''}` });
+  if (audio) send({ ...base, url: audio.url, tag: `${t('audio')}${audio.language ? ` ${audio.language}` : ''}` });
   return video;
 }
 
@@ -184,9 +191,9 @@ function mseRow(tracks) {
   );
   return {
     key,
-    name: `緩存 (${codecs.join(' + ')})`,
+    name: t('captureName', codecs.join(' + ')),
     title: tracks.map((t) => t.mime).join(' | '),
-    meta: ['MSE', formatBytes(total), tracks.some((t) => t.truncated) ? '已達上限' : ''],
+    meta: ['MSE', formatBytes(total), tracks.some((t) => t.truncated) ? t('limitReached') : ''],
     buttons: [button],
   };
 }
@@ -207,14 +214,14 @@ function startDash(m, rep) {
 function dashRows(m, name) {
   const row = (key, meta, button) => ({ key, name, title: m.url, meta, buttons: [button] });
   const off = (text, title) => ({ text, title, disabled: true });
-  if (!m.probed) return [row(m.url, ['DASH'], off('解析中'))];
-  if (m.error) return [row(m.url, ['DASH'], off('無法解析', m.error))];
-  if (m.live) return [row(m.url, ['DASH'], off('直播', '不支援直播串流'))];
+  if (!m.probed) return [row(m.url, ['DASH'], off(t('probing')))];
+  if (m.error) return [row(m.url, ['DASH'], off(t('unreadable'), localize(m.error)))];
+  if (m.live) return [row(m.url, ['DASH'], off(t('live'), t('liveUnsupported')))];
   return m.reps.map((r) =>
     row(
       `${m.url}#${r.id}`,
       ['DASH', repLabel(r), rate(r.bandwidth), formatDuration(m.duration)],
-      r.protected ? off('受保護', '此串流受 DRM 保護') : queueButton(`${m.url}#${r.id}`, () => startDash(m, r)),
+      r.protected ? off(t('protected'), t('drmProtected')) : queueButton(`${m.url}#${r.id}`, () => startDash(m, r)),
     ),
   );
 }
@@ -229,8 +236,8 @@ function rowsFor(m) {
       send({ type: 'download', tabId: tab.id, mediaId: m.id, filename: filenameFor(titleForFiles(), m.ext) });
     return [row(m.url, [m.ext.toUpperCase(), formatBytes(m.size)], queueButton(m.url, start))];
   }
-  if (!m.probed) return [row(m.url, ['HLS'], off('解析中'))];
-  if (m.error) return [row(m.url, ['HLS'], off('無法解析', m.error))];
+  if (!m.probed) return [row(m.url, ['HLS'], off(t('probing')))];
+  if (m.error) return [row(m.url, ['HLS'], off(t('unreadable'), localize(m.error)))];
   if (m.variants) {
     return m.variants.map((v) =>
       row(
@@ -241,15 +248,15 @@ function rowsFor(m) {
     );
   }
   const meta = ['HLS', formatDuration(m.duration)];
-  if (m.live) return [row(m.url, meta, off('直播', '不支援直播串流'))];
-  if (m.encryption && m.encryption !== 'AES-128') return [row(m.url, meta, off('受保護', `${m.encryption} 加密不支援`))];
+  if (m.live) return [row(m.url, meta, off(t('live'), t('liveUnsupported')))];
+  if (m.encryption && m.encryption !== 'AES-128') return [row(m.url, meta, off(t('protected'), t('encryptionUnsupported', m.encryption)))];
   return [row(m.url, meta, queueButton(m.url, () => startHls(m, m.url, '', null)))];
 }
 
 // A group folds into one summary row, and opens into its rows; folded by default.
 function fold(key, name, meta, rows, extra = []) {
   const toggle = {
-    text: open.has(key) ? '收合' : '展開',
+    text: open.has(key) ? t('collapse') : t('expand'),
     onClick: () => {
       open.has(key) ? open.delete(key) : open.add(key);
       renderMedia();
@@ -266,8 +273,8 @@ function imageRows(images) {
   const total = known.reduce((n, m) => n + m.size, 0);
   return fold(
     'images',
-    `圖片（${images.length} 張）`,
-    [known.length ? `${known.length === images.length ? '' : '至少 '}${formatBytes(total)}` : ''],
+    t('imagesGroup', images.length),
+    [known.length ? (known.length === images.length ? formatBytes(total) : t('atLeast', formatBytes(total))) : ''],
     images.map((m) => ({
       key: m.url,
       name: displayName(m.url),
@@ -279,14 +286,14 @@ function imageRows(images) {
         ),
       ],
     })),
-    [queueButton(`images:${page.url}`, () => send({ type: 'download-images', tabId: tab.id, title: titleForFiles() }), '全部下載')],
+    [queueButton(`images:${page.url}`, () => send({ type: 'download-images', tabId: tab.id, title: titleForFiles() }), t('downloadAll'))],
   );
 }
 
-const renderMediaRows = makeRenderer(mediaList, '尚未偵測到媒體');
+const renderMediaRows = makeRenderer(mediaList, t('noMedia'));
 function renderMedia() {
   const shown = media.filter((m) => !m.parent);
-  // Files and streams: several fold into 影音（N 個）, like the captures and the images.
+  // Files and streams: several fold into one "Media (N)" row, like the captures and the images.
   const videos = shown.filter((m) => m.kind !== 'mse' && m.kind !== 'image');
   const videoRows = videos.flatMap(rowsFor);
   const players = new Map(); // player -> its tracks
@@ -298,8 +305,8 @@ function renderMedia() {
   const captureRows = [...players.values()].map(mseRow);
   const images = shown.filter((m) => m.kind === 'image');
   renderMediaRows([
-    ...(videos.length > 1 ? fold('videos', `影音（${videos.length} 個）`, [], videoRows) : videoRows),
-    ...(captureRows.length > 1 ? fold('captures', `緩存（${captureRows.length} 個）`, [], captureRows) : captureRows),
+    ...(videos.length > 1 ? fold('videos', t('mediaGroup', videos.length), [], videoRows) : videoRows),
+    ...(captureRows.length > 1 ? fold('captures', t('capturesGroup', captureRows.length), [], captureRows) : captureRows),
     ...(images.length ? imageRows(images) : []),
   ]);
 }
@@ -312,19 +319,19 @@ const nativeProgress = new Map(); // downloadId -> { bytes, total }
 function progressText(j) {
   if (j.kind === 'mse') {
     // Progress is how far the player has buffered, in milliseconds.
-    if (!j.total) return '準備中';
+    if (!j.total) return t('preparing');
     const pct = `${Math.floor((j.done / j.total) * 100)}%`;
-    return `${pct} · 已緩衝 ${formatDuration(j.done / 1000)} / ${formatDuration(j.total / 1000)}`;
+    return `${pct} · ${t('bufferedOf', formatDuration(j.done / 1000), formatDuration(j.total / 1000))}`;
   }
   if (j.kind === 'native') {
     const p = nativeProgress.get(j.downloadId);
-    if (!p) return '下載中';
+    if (!p) return t('downloading');
     return p.total > 0 ? `${Math.floor((p.bytes / p.total) * 100)}% · ${formatBytes(p.total)}` : formatBytes(p.bytes);
   }
-  if (j.kind === 'images') return j.total ? `${j.done}/${j.total} 張 · ${formatBytes(j.bytes)}` : '準備中';
-  if (!j.total) return j.bytes ? formatBytes(j.bytes) : '準備中';
+  if (j.kind === 'images') return j.total ? `${t('imagesProgress', j.done, j.total)} · ${formatBytes(j.bytes)}` : t('preparing');
+  if (!j.total) return j.bytes ? formatBytes(j.bytes) : t('preparing');
   const pct = `${Math.floor((j.done / j.total) * 100)}%`;
-  return j.kind === 'hls' ? `${pct} · ${j.done}/${j.total} 片段` : `${pct} · ${formatBytes(j.total)}`;
+  return j.kind === 'hls' ? `${pct} · ${t('segmentsProgress', j.done, j.total)}` : `${pct} · ${formatBytes(j.total)}`;
 }
 
 // Two separate controls: pause/resume keeps the download, × cancels it and drops it from
@@ -332,42 +339,42 @@ function progressText(j) {
 function jobRow(j) {
   const act = (type) => () => send({ type, id: j.id });
   const unfinished = ['queued', 'running', 'paused', 'saving'].includes(j.status);
-  const remove = { text: '×', title: unfinished ? '取消並刪除' : '從清單移除', onClick: act('delete-job') };
+  const remove = { text: '×', title: unfinished ? t('cancelAndDelete') : t('removeFromList'), onClick: act('delete-job') };
   const spec = { key: j.id, name: j.filename, title: j.url, meta: [], buttons: [] };
   switch (j.status) {
     case 'running':
       spec.meta = [progressText(j)];
-      spec.buttons = [{ text: '暫停', onClick: act('pause-job') }, remove];
+      spec.buttons = [{ text: t('pause'), onClick: act('pause-job') }, remove];
       break;
     case 'paused':
-      spec.meta = ['已暫停', progressText(j)];
-      spec.buttons = [{ text: '繼續', onClick: act('resume-job') }, remove];
+      spec.meta = [t('paused'), progressText(j)];
+      spec.buttons = [{ text: t('resume'), onClick: act('resume-job') }, remove];
       break;
     case 'queued':
-      spec.meta = ['排隊中'];
+      spec.meta = [t('waiting')];
       spec.buttons = [remove];
       break;
     case 'saving':
-      spec.meta = ['存檔中'];
+      spec.meta = [t('saving')];
       spec.buttons = [remove];
       break;
     case 'done':
-      spec.meta = ['完成', formatBytes(j.bytes || nativeProgress.get(j.downloadId)?.total), j.failedCount ? `${j.failedCount} 張失敗` : ''];
-      spec.buttons = [{ text: '顯示', onClick: () => chrome.downloads.show(j.downloadId) }, remove];
+      spec.meta = [t('done'), formatBytes(j.bytes || nativeProgress.get(j.downloadId)?.total), j.failedCount ? t('imagesFailed', j.failedCount) : ''];
+      spec.buttons = [{ text: t('show'), onClick: () => chrome.downloads.show(j.downloadId) }, remove];
       break;
     case 'failed':
-      spec.meta = [`失敗：${j.error || '未知錯誤'}`];
+      spec.meta = [t('failed', localize(j.error) || t('unknownError'))];
       spec.metaError = true;
       spec.buttons = [remove];
       break;
     default:
-      spec.meta = ['已取消'];
+      spec.meta = [t('cancelled')];
       spec.buttons = [remove];
   }
   return spec;
 }
 
-const renderJobRows = makeRenderer(jobList, '沒有下載');
+const renderJobRows = makeRenderer(jobList, t('noDownloads'));
 const renderJobs = () => renderJobRows(jobs.map(jobRow));
 
 async function pollNative() {

@@ -1,5 +1,7 @@
 # Video Downloader
 
+[English](README.en.md) | 繁體中文
+
 Chrome 擴充功能（Manifest V3）：偵測網頁中播放的影片、音訊、HLS／DASH 串流與圖片並下載。功能參考 Video DownloadHelper 與貓抓（cat-catch）。
 
 ## 使用聲明
@@ -7,6 +9,8 @@ Chrome 擴充功能（Manifest V3）：偵測網頁中播放的影片、音訊�
 本工具僅供下載使用者有權保存的內容。使用者應遵守各網站的服務條款與著作權法規；本專案不支援、也不協助規避 DRM 或其他存取控制。
 
 ## 使用方式
+
+介面語言跟隨瀏覽器：繁體中文或英文，其他語言顯示英文。
 
 點工具列圖示會開啟一個獨立小視窗（已開啟則切換過去），由上到下：
 
@@ -85,6 +89,7 @@ Chrome 擴充功能（Manifest V3）：偵測網頁中播放的影片、音訊�
 | `lib/jobs.js` | 下載流程：整檔（可續傳）、平行分段下載、多檔各自下載（單檔失敗不中斷）、暫停閘門、HLS 與 DASH 工作 |
 | `lib/headers.js` | 身分標頭的擷取與過濾 |
 | `lib/fragments.js` | MSE 捕捉的重組：解析 fMP4／WebM 片段，排序、去重、跨畫質拼接、補上總長度；fMP4 影像＋音訊合併與索引 |
+| `lib/i18n.js`、`_locales/` | 介面文字（`en`、`zh_TW`）；offscreen 文件與頁面環境沒有 `chrome.i18n`，訊息以代碼傳出，由小視窗顯示時轉成文字 |
 
 ## 開發
 

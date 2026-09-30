@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import './chrome-i18n.js';
 import { parseDuration, parseMpd, parseXml, repExt, repLabel } from '../lib/dash.js';
 
 test('parseXml handles attributes, namespaces, entities, comments and self-closing tags', () => {
@@ -44,7 +45,7 @@ test('SegmentTemplate with $Number$ and duration, inherited from the AdaptationS
   assert.deepEqual(mpd.reps.map((r) => [r.id, r.kind, repLabel(r), repExt(r)]), [
     ['v1080', 'video', '1080p', 'mp4'],
     ['v480', 'video', '480p', 'mp4'],
-    ['a128', 'audio', '音訊 128k', 'm4a'],
+    ['a128', 'audio', 'Audio 128k', 'm4a'],
   ]);
   const { init, segments } = mpd.segmentsFor('v1080');
   assert.equal(init.url, 'https://site.example/v/media/v1080/init.mp4');

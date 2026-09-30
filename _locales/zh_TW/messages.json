@@ -1,0 +1,303 @@
+{
+  "extName": {
+    "message": "Video Downloader"
+  },
+  "extDescription": {
+    "message": "偵測網頁中播放的影片、音訊、HLS／DASH 串流與圖片並下載。"
+  },
+  "back": {
+    "message": "上一頁 (Alt+←)"
+  },
+  "forward": {
+    "message": "下一頁 (Alt+→)"
+  },
+  "addressPlaceholder": {
+    "message": "輸入網址"
+  },
+  "queueHeading": {
+    "message": "下載中"
+  },
+  "noMedia": {
+    "message": "尚未偵測到媒體"
+  },
+  "noDownloads": {
+    "message": "沒有下載"
+  },
+  "download": {
+    "message": "下載"
+  },
+  "downloadAll": {
+    "message": "全部下載"
+  },
+  "added": {
+    "message": "已加入"
+  },
+  "expand": {
+    "message": "展開"
+  },
+  "collapse": {
+    "message": "收合"
+  },
+  "mediaGroup": {
+    "message": "影音（$count$ 個）",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "capturesGroup": {
+    "message": "緩存（$count$ 個）",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "imagesGroup": {
+    "message": "圖片（$count$ 張）",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "captureName": {
+    "message": "緩存 ($codecs$)",
+    "placeholders": {
+      "codecs": {
+        "content": "$1"
+      }
+    }
+  },
+  "atLeast": {
+    "message": "至少 $size$",
+    "placeholders": {
+      "size": {
+        "content": "$1"
+      }
+    }
+  },
+  "limitReached": {
+    "message": "已達上限"
+  },
+  "probing": {
+    "message": "解析中"
+  },
+  "unreadable": {
+    "message": "無法解析"
+  },
+  "live": {
+    "message": "直播"
+  },
+  "liveUnsupported": {
+    "message": "不支援直播串流"
+  },
+  "protected": {
+    "message": "受保護"
+  },
+  "drmProtected": {
+    "message": "此串流受 DRM 保護"
+  },
+  "encryptionUnsupported": {
+    "message": "$method$ 加密不支援",
+    "placeholders": {
+      "method": {
+        "content": "$1"
+      }
+    }
+  },
+  "audio": {
+    "message": "音訊"
+  },
+  "video": {
+    "message": "影像"
+  },
+  "audioBitrate": {
+    "message": "音訊 $kbps$k",
+    "placeholders": {
+      "kbps": {
+        "content": "$1"
+      }
+    }
+  },
+  "defaultQuality": {
+    "message": "預設"
+  },
+  "preparing": {
+    "message": "準備中"
+  },
+  "downloading": {
+    "message": "下載中"
+  },
+  "bufferedOf": {
+    "message": "已緩衝 $done$ / $total$",
+    "placeholders": {
+      "done": {
+        "content": "$1"
+      },
+      "total": {
+        "content": "$2"
+      }
+    }
+  },
+  "imagesProgress": {
+    "message": "$done$/$total$ 張",
+    "placeholders": {
+      "done": {
+        "content": "$1"
+      },
+      "total": {
+        "content": "$2"
+      }
+    }
+  },
+  "segmentsProgress": {
+    "message": "$done$/$total$ 片段",
+    "placeholders": {
+      "done": {
+        "content": "$1"
+      },
+      "total": {
+        "content": "$2"
+      }
+    }
+  },
+  "pause": {
+    "message": "暫停"
+  },
+  "resume": {
+    "message": "繼續"
+  },
+  "show": {
+    "message": "顯示"
+  },
+  "cancelAndDelete": {
+    "message": "取消並刪除"
+  },
+  "removeFromList": {
+    "message": "從清單移除"
+  },
+  "paused": {
+    "message": "已暫停"
+  },
+  "waiting": {
+    "message": "排隊中"
+  },
+  "saving": {
+    "message": "存檔中"
+  },
+  "done": {
+    "message": "完成"
+  },
+  "imagesFailed": {
+    "message": "$count$ 張失敗",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "failed": {
+    "message": "失敗：$reason$",
+    "placeholders": {
+      "reason": {
+        "content": "$1"
+      }
+    }
+  },
+  "unknownError": {
+    "message": "未知錯誤"
+  },
+  "cancelled": {
+    "message": "已取消"
+  },
+  "imagesFolder": {
+    "message": "$title$（$count$ 張圖片）",
+    "placeholders": {
+      "title": {
+        "content": "$1"
+      },
+      "count": {
+        "content": "$2"
+      }
+    }
+  },
+  "errPageUnreachable": {
+    "message": "無法連到頁面，請重新整理後再試"
+  },
+  "errMediaGone": {
+    "message": "找不到這個媒體，頁面可能已經換頁"
+  },
+  "errStreamGone": {
+    "message": "找不到這個串流，頁面可能已經換頁"
+  },
+  "errNoQuality": {
+    "message": "找不到這個畫質"
+  },
+  "errNoImages": {
+    "message": "沒有可下載的圖片"
+  },
+  "errNoPage": {
+    "message": "沒有可擷取的網頁"
+  },
+  "errImagesUnsaved": {
+    "message": "圖片都無法存檔"
+  },
+  "errSaveInterrupted": {
+    "message": "存檔被中斷"
+  },
+  "errViewerClosed": {
+    "message": "小視窗已關閉"
+  },
+  "errNoPlayerElement": {
+    "message": "找不到播放這個串流的影片元素"
+  },
+  "errLiveCapture": {
+    "message": "直播串流無法下載"
+  },
+  "errPlayerStalled": {
+    "message": "播放器停止緩衝"
+  },
+  "errNoMse": {
+    "message": "這個頁面沒有以 MediaSource 播放的影片"
+  },
+  "errNoInitSegment": {
+    "message": "沒有找到初始化片段，請重新整理頁面後再試"
+  },
+  "errBadMpd": {
+    "message": "不是有效的 MPD 清單"
+  },
+  "errNoPeriod": {
+    "message": "MPD 沒有任何 Period"
+  },
+  "errBadM3u8": {
+    "message": "不是有效的 m3u8 播放清單"
+  },
+  "errHttp": {
+    "message": "下載失敗（HTTP $status$）",
+    "placeholders": {
+      "status": {
+        "content": "$1"
+      }
+    }
+  },
+  "errLiveUnsupported": {
+    "message": "直播串流目前不支援下載"
+  },
+  "errNoSegments": {
+    "message": "播放清單沒有任何片段"
+  },
+  "errManifestNoSegments": {
+    "message": "清單沒有任何片段"
+  },
+  "errDrmOrSampleAes": {
+    "message": "此串流受 DRM 或 SAMPLE-AES 保護，無法下載"
+  },
+  "errDrm": {
+    "message": "此串流受 DRM 保護，無法下載"
+  },
+  "errInsecure": {
+    "message": "此頁面不是安全連線（https），無法解密"
+  }
+}

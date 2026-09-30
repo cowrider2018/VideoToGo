@@ -12,6 +12,8 @@
   const rand = () => Math.random().toString(36).slice(2);
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const post = (msg) => window.postMessage({ [TAG]: msg.type, ...msg }, '*');
+  // No chrome.i18n in the page's world: errors carry a token that lib/i18n.js's localize() reads.
+  const fail = (name) => new Error(`__MSG_${name}__`);
 
   const streams = new Map(); // SourceBuffer -> { id, source, mime, chunks, bytes, truncated }
   const sources = new Map(); // MediaSource -> { id, url }
@@ -112,9 +114,9 @@
   // still missing.
   async function walk(job, ms, from = 0, to = null) {
     const el = elementOf(ms);
-    if (!el) throw new Error('找不到播放這個串流的影片元素');
+    if (!el) throw fail('errNoPlayerElement');
     const duration = () => (Number.isFinite(ms.duration) ? ms.duration : el.duration);
-    if (!Number.isFinite(duration())) throw new Error('直播串流無法下載');
+    if (!Number.isFinite(duration())) throw fail('errLiveCapture');
     const state = walkers.get(job);
     const before = { muted: el.muted, rate: el.playbackRate };
     el.muted = true;
@@ -125,7 +127,7 @@
     let playing = false;
     try {
       for (;;) {
-        if (state.cancelled) throw new Error('已取消');
+        if (state.cancelled) throw fail('cancelled');
         if (state.paused) {
           el.pause();
           playing = false;
@@ -150,7 +152,7 @@
         } else if (stalled > 3000 && playing && end >= el.currentTime - 0.1) {
           el.currentTime = end + 0.1; // step over a gap in what is buffered
         }
-        if (stalled > 30000) throw new Error('播放器停止緩衝');
+        if (stalled > 30000) throw fail('errPlayerStalled');
         await sleep(150);
       }
     } finally {
@@ -190,7 +192,7 @@
     walkers.set(job, { paused: false, cancelled: false });
     try {
       const ms = await pickSource(sourceId);
-      if (!ms) throw new Error('這個頁面沒有以 MediaSource 播放的影片');
+      if (!ms) throw fail('errNoMse');
       if (!ranges?.length) await walk(job, ms);
       for (const [from, to] of ranges || []) await walk(job, ms, from, to);
       const id = sourceOf(ms).id;

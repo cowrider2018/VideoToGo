@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { createCipheriv, randomBytes } from 'node:crypto';
 import { test } from 'node:test';
+import './chrome-i18n.js';
 import { fetchEach, runHlsJob } from '../lib/jobs.js';
 
 const BASE = 'https://cdn.example.com/v/';
@@ -56,14 +57,14 @@ test('downloads, decrypts and concatenates a stream reached through its master',
 
 test('refuses live streams', async () => {
   const { fetchBytes } = fixture({ live: true });
-  await assert.rejects(runHlsJob(`${BASE}media.m3u8`, { fetchBytes }), /直播/);
+  await assert.rejects(runHlsJob(`${BASE}media.m3u8`, { fetchBytes }), /Live streams/);
 });
 
 test('stops when aborted', async () => {
   const { fetchBytes } = fixture({ encrypted: false });
   const controller = new AbortController();
   controller.abort();
-  await assert.rejects(runHlsJob(`${BASE}media.m3u8`, { fetchBytes, signal: controller.signal }), /已取消/);
+  await assert.rejects(runHlsJob(`${BASE}media.m3u8`, { fetchBytes, signal: controller.signal }), /Cancelled/);
 });
 
 test('fetchEach keeps going past a failed file and reports every result in order', async () => {

@@ -134,7 +134,7 @@
         files = built.map(({ t, a }) => {
           const bytes = extOf(t.mime) === 'mp4' || extOf(t.mime) === 'm4a' ? [indexedMp4(a)] : [a.init, ...a.fragments];
           const blob = new Blob(bytes, { type: t.mime.split(';')[0] });
-          const label = tracks.length > 1 ? (t.mime.startsWith('audio/') ? '音訊' : '影像') : '';
+          const label = tracks.length > 1 ? chrome.i18n.getMessage(t.mime.startsWith('audio/') ? 'audio' : 'video') : '';
           return { blobUrl: URL.createObjectURL(blob), ext: extOf(t.mime), label, size: blob.size };
         });
       }

@@ -1,6 +1,7 @@
 import { identityHeaders, pageHeaders } from './lib/headers.js';
 import { parseMpd, repExt } from './lib/dash.js';
 import { parsePlaylist } from './lib/hls.js';
+import { t } from './lib/i18n.js';
 import { classify, filenameFor, imageFilename, sizeFromHeaders, urlExt } from './lib/media.js';
 
 // Everything lives in storage.session because the service worker can be torn down at any
@@ -302,7 +303,7 @@ async function askPage(tabId, frameId, msg, tries = 6) {
     try {
       return await chrome.tabs.sendMessage(tabId, msg, { frameId: frameId ?? 0 });
     } catch {
-      if (i >= tries) throw new Error('無法連到頁面，請重新整理後再試');
+      if (i >= tries) throw new Error(t('errPageUnreachable'));
       await sleep(500);
     }
   }
@@ -411,7 +412,7 @@ async function runInOffscreen(job, item) {
 
 async function downloadFile({ tabId, mediaId, filename }) {
   const item = await findMedia(tabId, mediaId);
-  if (!item) throw new Error('找不到這個媒體，頁面可能已經換頁');
+  if (!item) throw new Error(t('errMediaGone'));
   const headers = Object.entries(pageHeaders(item.headers)).map(([name, value]) => ({ name, value }));
   const job = await newJob({
     kind: 'native',
@@ -434,7 +435,7 @@ async function downloadFile({ tabId, mediaId, filename }) {
 
 async function startHls({ tabId, mediaId, url, title, tag }) {
   const item = await findMedia(tabId, mediaId);
-  if (!item) throw new Error('找不到這個串流，頁面可能已經換頁');
+  if (!item) throw new Error(t('errStreamGone'));
   const job = await newJob({
     kind: 'hls',
     tabId,
@@ -449,9 +450,9 @@ async function startHls({ tabId, mediaId, url, title, tag }) {
 
 async function startDash({ tabId, mediaId, repId, title, tag }) {
   const item = await findMedia(tabId, mediaId);
-  if (!item) throw new Error('找不到這個串流，頁面可能已經換頁');
+  if (!item) throw new Error(t('errStreamGone'));
   const rep = item.reps?.find((r) => r.id === repId);
-  if (!rep) throw new Error('找不到這個畫質');
+  if (!rep) throw new Error(t('errNoQuality'));
   const job = await newJob({
     kind: 'dash',
     tabId,
@@ -469,13 +470,13 @@ async function startDash({ tabId, mediaId, repId, title, tag }) {
 async function startImages({ tabId, title }) {
   const { [tabKey(tabId)]: list = [] } = await chrome.storage.session.get(tabKey(tabId));
   const images = list.filter((m) => m.kind === 'image');
-  if (!images.length) throw new Error('沒有可下載的圖片');
+  if (!images.length) throw new Error(t('errNoImages'));
   const job = await newJob({
     kind: 'images',
     tabId,
     url: await pageUrlOf(tabId),
     title,
-    filename: `${title}（${images.length} 張圖片）`,
+    filename: t('imagesFolder', title, images.length),
     files: images.map((m) => ({ url: m.url, filename: imageFilename(title, m.url, m.ext) })),
     identity: await snapshotIdentity(tabId, images[0]),
   });
@@ -497,7 +498,7 @@ const toViewer = (tabId, msg) => chrome.runtime.sendMessage({ target: 'viewer', 
 
 async function startMse({ tabId, title }) {
   const url = await pageUrlOf(tabId);
-  if (!/^https?:/.test(url)) throw new Error('沒有可擷取的網頁');
+  if (!/^https?:/.test(url)) throw new Error(t('errNoPage'));
   await newJob({ kind: 'mse', tabId, frameId: null, url, title, filename: filenameFor(title, 'mp4'), status: 'queued' });
   await nextCaptures();
 }
@@ -631,7 +632,7 @@ async function settleImages(id) {
       if (j.id !== id || j.status !== 'saving') return j;
       settled = true;
       const failedCount = job.failedCount + lost;
-      return saved ? { ...j, status: 'done', failedCount } : { ...j, status: 'failed', error: '圖片都無法存檔', failedCount };
+      return saved ? { ...j, status: 'done', failedCount } : { ...j, status: 'failed', error: t('errImagesUnsaved'), failedCount };
     }),
   );
   if (settled) finishJob(job);
@@ -732,7 +733,7 @@ chrome.downloads.onChanged.addListener(async (delta) => {
     retryAsPage(job).catch((e) => failJob(job.id, e.message));
     return;
   } else {
-    await failJob(job.id, delta.error?.current || '存檔被中斷');
+    await failJob(job.id, delta.error?.current || t('errSaveInterrupted'));
     return;
   }
   if (job.kind !== 'native') finishJob(job);
@@ -795,7 +796,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   update(JOBS, (jobs = []) =>
     jobs.map((j) =>
       j.kind === 'mse' && j.tabId === tabId && ['queued', 'running', 'paused'].includes(j.status)
-        ? { ...j, status: 'failed', error: '小視窗已關閉' }
+        ? { ...j, status: 'failed', error: t('errViewerClosed') }
         : j,
     ),
   );

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import './chrome-i18n.js';
 import { assembleTrack, gaps, mp4Boxes } from '../lib/fragments.js';
 
 // ---- MP4 builders ----
@@ -174,7 +175,7 @@ test('webm: qualities are mixed under the best init', () => {
 });
 
 test('no init segment at all is an error', () => {
-  assert.throws(() => assembleTrack([cat(frag(0, 1))], 'video/mp4'), /初始化/);
+  assert.throws(() => assembleTrack([cat(frag(0, 1))], 'video/mp4'), /initialization segment/);
 });
 
 test('gaps: missing start, a hole in the middle, a missing end', () => {

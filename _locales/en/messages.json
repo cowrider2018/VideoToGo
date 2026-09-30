@@ -1,0 +1,303 @@
+{
+  "extName": {
+    "message": "Video Downloader"
+  },
+  "extDescription": {
+    "message": "Detects the videos, audio, HLS/DASH streams and images a web page plays or shows, and downloads them."
+  },
+  "back": {
+    "message": "Back (Alt+←)"
+  },
+  "forward": {
+    "message": "Forward (Alt+→)"
+  },
+  "addressPlaceholder": {
+    "message": "Enter a URL"
+  },
+  "queueHeading": {
+    "message": "Downloads"
+  },
+  "noMedia": {
+    "message": "No media detected yet"
+  },
+  "noDownloads": {
+    "message": "No downloads"
+  },
+  "download": {
+    "message": "Download"
+  },
+  "downloadAll": {
+    "message": "Download all"
+  },
+  "added": {
+    "message": "Added"
+  },
+  "expand": {
+    "message": "Expand"
+  },
+  "collapse": {
+    "message": "Collapse"
+  },
+  "mediaGroup": {
+    "message": "Media ($count$)",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "capturesGroup": {
+    "message": "Buffers ($count$)",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "imagesGroup": {
+    "message": "Images ($count$)",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "captureName": {
+    "message": "Buffer ($codecs$)",
+    "placeholders": {
+      "codecs": {
+        "content": "$1"
+      }
+    }
+  },
+  "atLeast": {
+    "message": "at least $size$",
+    "placeholders": {
+      "size": {
+        "content": "$1"
+      }
+    }
+  },
+  "limitReached": {
+    "message": "Limit reached"
+  },
+  "probing": {
+    "message": "Reading…"
+  },
+  "unreadable": {
+    "message": "Can't read"
+  },
+  "live": {
+    "message": "Live"
+  },
+  "liveUnsupported": {
+    "message": "Live streams aren't supported"
+  },
+  "protected": {
+    "message": "Protected"
+  },
+  "drmProtected": {
+    "message": "This stream is protected by DRM"
+  },
+  "encryptionUnsupported": {
+    "message": "$method$ encryption isn't supported",
+    "placeholders": {
+      "method": {
+        "content": "$1"
+      }
+    }
+  },
+  "audio": {
+    "message": "Audio"
+  },
+  "video": {
+    "message": "Video"
+  },
+  "audioBitrate": {
+    "message": "Audio $kbps$k",
+    "placeholders": {
+      "kbps": {
+        "content": "$1"
+      }
+    }
+  },
+  "defaultQuality": {
+    "message": "Default"
+  },
+  "preparing": {
+    "message": "Preparing"
+  },
+  "downloading": {
+    "message": "Downloading"
+  },
+  "bufferedOf": {
+    "message": "buffered $done$ / $total$",
+    "placeholders": {
+      "done": {
+        "content": "$1"
+      },
+      "total": {
+        "content": "$2"
+      }
+    }
+  },
+  "imagesProgress": {
+    "message": "$done$/$total$ images",
+    "placeholders": {
+      "done": {
+        "content": "$1"
+      },
+      "total": {
+        "content": "$2"
+      }
+    }
+  },
+  "segmentsProgress": {
+    "message": "$done$/$total$ segments",
+    "placeholders": {
+      "done": {
+        "content": "$1"
+      },
+      "total": {
+        "content": "$2"
+      }
+    }
+  },
+  "pause": {
+    "message": "Pause"
+  },
+  "resume": {
+    "message": "Resume"
+  },
+  "show": {
+    "message": "Show"
+  },
+  "cancelAndDelete": {
+    "message": "Cancel and delete"
+  },
+  "removeFromList": {
+    "message": "Remove from list"
+  },
+  "paused": {
+    "message": "Paused"
+  },
+  "waiting": {
+    "message": "Queued"
+  },
+  "saving": {
+    "message": "Saving"
+  },
+  "done": {
+    "message": "Done"
+  },
+  "imagesFailed": {
+    "message": "$count$ failed",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "failed": {
+    "message": "Failed: $reason$",
+    "placeholders": {
+      "reason": {
+        "content": "$1"
+      }
+    }
+  },
+  "unknownError": {
+    "message": "Unknown error"
+  },
+  "cancelled": {
+    "message": "Cancelled"
+  },
+  "imagesFolder": {
+    "message": "$title$ ($count$ images)",
+    "placeholders": {
+      "title": {
+        "content": "$1"
+      },
+      "count": {
+        "content": "$2"
+      }
+    }
+  },
+  "errPageUnreachable": {
+    "message": "Can't reach the page; reload it and try again"
+  },
+  "errMediaGone": {
+    "message": "This media is no longer there; the page may have moved on"
+  },
+  "errStreamGone": {
+    "message": "This stream is no longer there; the page may have moved on"
+  },
+  "errNoQuality": {
+    "message": "Can't find this quality"
+  },
+  "errNoImages": {
+    "message": "No images to download"
+  },
+  "errNoPage": {
+    "message": "No page to capture"
+  },
+  "errImagesUnsaved": {
+    "message": "None of the images could be saved"
+  },
+  "errSaveInterrupted": {
+    "message": "Saving was interrupted"
+  },
+  "errViewerClosed": {
+    "message": "The viewer window was closed"
+  },
+  "errNoPlayerElement": {
+    "message": "Can't find the video element playing this stream"
+  },
+  "errLiveCapture": {
+    "message": "Live streams can't be downloaded"
+  },
+  "errPlayerStalled": {
+    "message": "The player stopped buffering"
+  },
+  "errNoMse": {
+    "message": "This page has no video playing through MediaSource"
+  },
+  "errNoInitSegment": {
+    "message": "No initialization segment found; reload the page and try again"
+  },
+  "errBadMpd": {
+    "message": "Not a valid MPD manifest"
+  },
+  "errNoPeriod": {
+    "message": "The MPD has no Period"
+  },
+  "errBadM3u8": {
+    "message": "Not a valid m3u8 playlist"
+  },
+  "errHttp": {
+    "message": "Download failed (HTTP $status$)",
+    "placeholders": {
+      "status": {
+        "content": "$1"
+      }
+    }
+  },
+  "errLiveUnsupported": {
+    "message": "Live streams can't be downloaded yet"
+  },
+  "errNoSegments": {
+    "message": "The playlist has no segments"
+  },
+  "errManifestNoSegments": {
+    "message": "The manifest has no segments"
+  },
+  "errDrmOrSampleAes": {
+    "message": "This stream is protected by DRM or SAMPLE-AES and can't be downloaded"
+  },
+  "errDrm": {
+    "message": "This stream is protected by DRM and can't be downloaded"
+  },
+  "errInsecure": {
+    "message": "This page isn't on a secure connection (https), so the stream can't be decrypted"
+  }
+}
