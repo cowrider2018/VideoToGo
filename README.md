@@ -65,6 +65,7 @@ Chrome 擴充功能（Manifest V3）：偵測網頁中播放的影片、音訊�
 
 ## 限制
 
+- 不偵測、不下載 YouTube 的內容，包括其他網站內嵌的 YouTube 播放器與 YouTube 的影片、縮圖主機；YouTube 本身仍可在小視窗中瀏覽，媒體清單會顯示「此網站不支援下載」。
 - 不支援 DRM（Widevine、PlayReady、FairPlay）保護的內容：金鑰只存在瀏覽器的解密模組中，擴充功能無法取得；受保護的畫質會顯示「受保護」並停用。HLS 的 SAMPLE-AES 同樣不支援。
 - 不支援直播串流（HLS 沒有 `#EXT-X-ENDLIST`、DASH 的 `type="dynamic"`）。
 - DASH 只處理第一個 Period。
@@ -88,6 +89,7 @@ Chrome 擴充功能（Manifest V3）：偵測網頁中播放的影片、音訊�
 | `lib/hls.js`、`lib/dash.js` | m3u8 與 MPD 解析（`dash.js` 內含精簡 XML 解析器，因為 service worker 沒有 `DOMParser`） |
 | `lib/jobs.js` | 下載流程：整檔（可續傳）、平行分段下載、多檔各自下載（單檔失敗不中斷）、暫停閘門、HLS 與 DASH 工作 |
 | `lib/headers.js` | 身分標頭的擷取與過濾 |
+| `lib/blocked.js` | 不下載的網站（YouTube）清單：偵測、MSE 攔截腳本與各下載入口都依此排除 |
 | `lib/fragments.js` | MSE 捕捉的重組：解析 fMP4／WebM 片段，排序、去重、跨畫質拼接、補上總長度；fMP4 影像＋音訊合併與索引 |
 | `lib/i18n.js`、`_locales/` | 介面文字（`en`、`zh_TW`）；offscreen 文件與頁面環境沒有 `chrome.i18n`，訊息以代碼傳出，由小視窗顯示時轉成文字 |
 

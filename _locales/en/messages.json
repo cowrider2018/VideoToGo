@@ -23,6 +23,9 @@
   "noDownloads": {
     "message": "No downloads"
   },
+  "siteBlocked": {
+    "message": "Downloads aren't available on this site"
+  },
   "download": {
     "message": "Download"
   },

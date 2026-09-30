@@ -23,6 +23,9 @@
   "noDownloads": {
     "message": "沒有下載"
   },
+  "siteBlocked": {
+    "message": "此網站不支援下載"
+  },
   "download": {
     "message": "下載"
   },

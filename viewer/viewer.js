@@ -1,3 +1,4 @@
+import { isBlocked } from '../lib/blocked.js';
 import { repLabel } from '../lib/dash.js';
 import { audioFor, variantLabel } from '../lib/hls.js';
 import { localize, t } from '../lib/i18n.js';
@@ -292,6 +293,8 @@ function imageRows(images) {
 
 const renderMediaRows = makeRenderer(mediaList, t('noMedia'));
 function renderMedia() {
+  // A blocked site (lib/blocked.js) browses as usual but offers nothing to download.
+  if (isBlocked(page.url)) return renderMediaRows([{ key: 'blocked', name: t('siteBlocked'), meta: [], buttons: [] }]);
   const shown = media.filter((m) => !m.parent);
   // Files and streams: several fold into one "Media (N)" row, like the captures and the images.
   const videos = shown.filter((m) => m.kind !== 'mse' && m.kind !== 'image');

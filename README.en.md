@@ -65,6 +65,7 @@ Many sites only hand their videos to their own pages: they check cookies (includ
 
 ## Limitations
 
+- Nothing from YouTube is detected or downloaded, including YouTube players embedded in other sites and the hosts YouTube serves its videos and thumbnails from. YouTube itself still browses normally in the window, and the media list says that downloads aren't available on the site.
 - Content protected by DRM (Widevine, PlayReady, FairPlay) is not supported: the keys exist only inside the browser's decryption module, which extensions cannot reach. Protected qualities show "Protected" and are disabled. HLS SAMPLE-AES is not supported either.
 - Live streams are not supported (HLS without `#EXT-X-ENDLIST`, DASH with `type="dynamic"`).
 - For DASH, only the first Period is handled.
@@ -88,6 +89,7 @@ Many sites only hand their videos to their own pages: they check cookies (includ
 | `lib/hls.js`, `lib/dash.js` | m3u8 and MPD parsing (`dash.js` includes a small XML parser, since the service worker has no `DOMParser`) |
 | `lib/jobs.js` | Download pipelines: whole files (resumable), parallel segment downloads, many files each on its own (one failure does not stop the rest), the pause gate, HLS and DASH jobs |
 | `lib/headers.js` | Capturing and filtering identity headers |
+| `lib/blocked.js` | The sites nothing is downloaded from (YouTube): detection, the MSE hook and every download entry point leave them out |
 | `lib/fragments.js` | Reassembly of MSE captures: parses fMP4/WebM fragments, sorts, de-duplicates, joins across qualities, fills in the total duration; merges and indexes fMP4 video and audio |
 | `lib/i18n.js`, `_locales/` | Interface text (`en`, `zh_TW`); the offscreen document and the page's world have no `chrome.i18n`, so their messages travel as tokens that the window turns into text when it shows them |
 

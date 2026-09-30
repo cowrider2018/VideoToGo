@@ -1,3 +1,4 @@
+import { BLOCKED_MATCHES, isBlocked } from './lib/blocked.js';
 import { identityHeaders, pageHeaders } from './lib/headers.js';
 import { parseMpd, repExt } from './lib/dash.js';
 import { parsePlaylist } from './lib/hls.js';
@@ -77,6 +78,7 @@ const MAX_SEGMENT_URLS = 3000;
 const MAX_IMAGES = 500;
 
 async function addMedia(tabId, item) {
+  if (isBlocked(item.url)) return;
   let added = null;
   await update(tabKey(tabId), (list = []) => {
     const old = list.find((m) => m.url === item.url);
@@ -114,6 +116,12 @@ async function addMedia(tabId, item) {
 async function findMedia(tabId, mediaId) {
   const { [tabKey(tabId)]: list = [] } = await chrome.storage.session.get(tabKey(tabId));
   return list.find((m) => m.id === mediaId) || null;
+}
+
+// Whether something seen in a tab comes from a blocked site (lib/blocked.js): served by one,
+// asked for by a page or frame of one (an embedded player too), or on a viewer showing one.
+async function fromBlocked(tabId, ...urls) {
+  return urls.some(isBlocked) || isBlocked(await pageUrlOf(tabId));
 }
 
 // A new page is showing (top frame, or the frame inside a viewer): start a fresh list.
@@ -266,6 +274,7 @@ async function setCapture(on) {
       {
         id: HOOK_ID,
         matches: ['http://*/*', 'https://*/*'],
+        excludeMatches: BLOCKED_MATCHES,
         js: ['inject/mse-hook.js'],
         runAt: 'document_start',
         world: 'MAIN',
@@ -273,6 +282,9 @@ async function setCapture(on) {
         persistAcrossSessions: false,
       },
     ]);
+  } else if (on && JSON.stringify(registered[0].excludeMatches || []) !== JSON.stringify(BLOCKED_MATCHES)) {
+    // Registered by an earlier version, before the blocked sites were left out.
+    await chrome.scripting.updateContentScripts([{ id: HOOK_ID, excludeMatches: BLOCKED_MATCHES }]);
   } else if (!on && registered.length) {
     await chrome.scripting.unregisterContentScripts({ ids: [HOOK_ID] });
   }
@@ -413,6 +425,7 @@ async function runInOffscreen(job, item) {
 async function downloadFile({ tabId, mediaId, filename }) {
   const item = await findMedia(tabId, mediaId);
   if (!item) throw new Error(t('errMediaGone'));
+  if (await fromBlocked(tabId, item.url)) throw new Error(t('siteBlocked'));
   const headers = Object.entries(pageHeaders(item.headers)).map(([name, value]) => ({ name, value }));
   const job = await newJob({
     kind: 'native',
@@ -436,6 +449,7 @@ async function downloadFile({ tabId, mediaId, filename }) {
 async function startHls({ tabId, mediaId, url, title, tag }) {
   const item = await findMedia(tabId, mediaId);
   if (!item) throw new Error(t('errStreamGone'));
+  if (await fromBlocked(tabId, item.url, url)) throw new Error(t('siteBlocked'));
   const job = await newJob({
     kind: 'hls',
     tabId,
@@ -451,6 +465,7 @@ async function startHls({ tabId, mediaId, url, title, tag }) {
 async function startDash({ tabId, mediaId, repId, title, tag }) {
   const item = await findMedia(tabId, mediaId);
   if (!item) throw new Error(t('errStreamGone'));
+  if (await fromBlocked(tabId, item.url)) throw new Error(t('siteBlocked'));
   const rep = item.reps?.find((r) => r.id === repId);
   if (!rep) throw new Error(t('errNoQuality'));
   const job = await newJob({
@@ -469,7 +484,8 @@ async function startDash({ tabId, mediaId, repId, title, tag }) {
 // All the images the page has shown, into a folder named after it. One queue row for the lot.
 async function startImages({ tabId, title }) {
   const { [tabKey(tabId)]: list = [] } = await chrome.storage.session.get(tabKey(tabId));
-  const images = list.filter((m) => m.kind === 'image');
+  if (await fromBlocked(tabId)) throw new Error(t('siteBlocked'));
+  const images = list.filter((m) => m.kind === 'image' && !isBlocked(m.url));
   if (!images.length) throw new Error(t('errNoImages'));
   const job = await newJob({
     kind: 'images',
@@ -499,6 +515,7 @@ const toViewer = (tabId, msg) => chrome.runtime.sendMessage({ target: 'viewer', 
 async function startMse({ tabId, title }) {
   const url = await pageUrlOf(tabId);
   if (!/^https?:/.test(url)) throw new Error(t('errNoPage'));
+  if (isBlocked(url)) throw new Error(t('siteBlocked'));
   await newJob({ kind: 'mse', tabId, frameId: null, url, title, filename: filenameFor(title, 'mp4'), status: 'queued' });
   await nextCaptures();
 }
@@ -776,6 +793,7 @@ chrome.webRequest.onHeadersReceived.addListener(
     if (!hit) return;
     inOrder(d.tabId, async () => {
       if (await isCaptureFrame(d.tabId, d.frameId)) return;
+      if (await fromBlocked(d.tabId, d.url, d.initiator, d.documentUrl)) return;
       // Images keep no headers: there can be hundreds, and the tab's identity has their hosts.
       await addMedia(d.tabId, { url: d.url, ...hit, size, headers: hit.kind === 'image' ? undefined : sent, frameId: d.frameId });
     });
@@ -878,6 +896,7 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
       // A capture frame's copy of the page is not what the viewer shows.
       inOrder(tabId, async () => {
         if (await isCaptureFrame(tabId, sender.frameId)) return;
+        if (await fromBlocked(tabId, sender.url)) return;
         if (msg.type === 'dom-media') await addDomMedia(tabId, sender.frameId, msg.urls);
         else if (msg.type === 'dom-images') await addDomImages(tabId, sender.frameId, msg.images);
         else await addPlayers(tabId, sender.frameId, msg.streams);
