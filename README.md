@@ -86,5 +86,4 @@ Chrome 擴充功能（Manifest V3）：偵測網頁中播放的影片、音訊�
 
 ```sh
 npm test        # 單元測試（node --test）
-npm run icons   # 重新產生 icons/*.png
 ```
