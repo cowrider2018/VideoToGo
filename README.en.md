@@ -99,4 +99,5 @@ Requires Chrome 116 or later.
 
 ```sh
 npm test        # unit tests (node --test)
+npm run pack    # build dist/videotogo-<version>.zip for the Chrome Web Store
 ```

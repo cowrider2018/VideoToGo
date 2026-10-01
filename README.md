@@ -99,4 +99,5 @@ Chrome 擴充功能（Manifest V3）：偵測網頁中播放的影片、音訊�
 
 ```sh
 npm test        # 單元測試（node --test）
+npm run pack    # 打包上架用的 dist/videotogo-<版本>.zip
 ```

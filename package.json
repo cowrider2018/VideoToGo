@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Chrome extension that detects videos on web pages and downloads them.",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "pack": "node scripts/pack.js"
   }
 }
