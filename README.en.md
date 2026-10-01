@@ -8,6 +8,8 @@ A Chrome extension (Manifest V3) that detects the videos, audio, HLS/DASH stream
 
 This tool is only for downloading content you have the right to keep. Follow each site's terms of service and copyright law. This project does not support, and does not help with, getting around DRM or other access controls.
 
+No user data is collected or sent anywhere; see the [privacy policy](PRIVACY.md#english).
+
 ## How to use
 
 The interface follows the browser's language: Traditional Chinese or English, and English for any other language.
