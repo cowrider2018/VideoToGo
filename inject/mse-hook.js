@@ -1,10 +1,14 @@
-// Runs in the page's own JS world at document_start while the viewer window is open.
+// Runs in the page's own JS world at document_start while the viewer window is open, and
+// only in frames under an extension page (the viewer): players in other tabs are left alone.
+// The page's world cannot tell this extension's id; content.js checks it before relaying.
 // Keeps a copy of every buffer a player feeds into Media Source Extensions, so videos that
 // play from blob: URLs (no downloadable file on the network) can still be saved, and can
 // drive the player to buffer the whole video quickly ("walking" the buffer).
 // Talks to the isolated content script through window.postMessage.
 (() => {
-  if (window.__vdMseHook || typeof MediaSource === 'undefined') return;
+  const ancestors = location.ancestorOrigins || [];
+  const outer = ancestors[ancestors.length - 1] || '';
+  if (!outer.startsWith('chrome-extension://') || window.__vdMseHook || typeof MediaSource === 'undefined') return;
   window.__vdMseHook = true;
 
   const TAG = '__vd_mse__';

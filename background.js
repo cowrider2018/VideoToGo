@@ -771,7 +771,8 @@ chrome.webRequest.onSendHeaders.addListener(
     if (d.tabId < 0) return;
     const headers = identityHeaders(d.requestHeaders);
     sentHeaders.set(d.requestId, headers);
-    rememberIdentity(d.tabId, d.url, headers);
+    // Only the viewer's page is ever downloaded from; other tabs' identities are not kept.
+    isViewer(d.tabId).then((yes) => yes && rememberIdentity(d.tabId, d.url, headers));
   },
   MEDIA_FILTER,
   ['requestHeaders', 'extraHeaders'],
@@ -792,7 +793,7 @@ chrome.webRequest.onHeadersReceived.addListener(
     const hit = classify(d.url, headers['content-type'], size);
     if (!hit) return;
     inOrder(d.tabId, async () => {
-      if (await isCaptureFrame(d.tabId, d.frameId)) return;
+      if (!(await isViewer(d.tabId)) || (await isCaptureFrame(d.tabId, d.frameId))) return;
       if (await fromBlocked(d.tabId, d.url, d.initiator, d.documentUrl)) return;
       // Images keep no headers: there can be hundreds, and the tab's identity has their hosts.
       await addMedia(d.tabId, { url: d.url, ...hit, size, headers: hit.kind === 'image' ? undefined : sent, frameId: d.frameId });
@@ -801,12 +802,6 @@ chrome.webRequest.onHeadersReceived.addListener(
   MEDIA_FILTER,
   ['responseHeaders'],
 );
-
-// In a viewer the page lives in the frame directly under the viewer page.
-// (In a viewer, the framed page reports its own navigations: see onFrameRole.)
-chrome.webNavigation.onCommitted.addListener(async (d) => {
-  if (d.frameId === 0 && !(await isViewer(d.tabId))) navigated(d.tabId);
-});
 
 chrome.tabs.onRemoved.addListener((tabId) => {
   tabTasks.delete(tabId);
@@ -895,7 +890,7 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
       if (tabId == null) return;
       // A capture frame's copy of the page is not what the viewer shows.
       inOrder(tabId, async () => {
-        if (await isCaptureFrame(tabId, sender.frameId)) return;
+        if (!(await isViewer(tabId)) || (await isCaptureFrame(tabId, sender.frameId))) return;
         if (await fromBlocked(tabId, sender.url)) return;
         if (msg.type === 'dom-media') await addDomMedia(tabId, sender.frameId, msg.urls);
         else if (msg.type === 'dom-images') await addDomImages(tabId, sender.frameId, msg.images);

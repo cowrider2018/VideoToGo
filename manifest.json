@@ -7,7 +7,6 @@
   "default_locale": "en",
   "permissions": [
     "webRequest",
-    "webNavigation",
     "downloads",
     "storage",
     "scripting",

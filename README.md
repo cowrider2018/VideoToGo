@@ -53,7 +53,7 @@ Chrome 擴充功能（Manifest V3）：偵測網頁中播放的影片、音訊�
 許多網站只把影片交給「自己的網頁」：檢查 Cookie（含 SameSite）、Referer、Origin，或播放器加上的 `Authorization` 等自訂標頭。
 
 - 小視窗內嵌的網站被 Chrome 視為第一方，Cookie 照常運作；只對小視窗內的框架移除 `X-Frame-Options` 與 `Content-Security-Policy`，讓網站可以被內嵌。
-- 記錄網頁對每個主機送出的請求標頭；加入下載時存成快照，由背景下載器以 `declarativeNetRequest` 原樣帶上，所以之後換頁也不影響。
+- 記錄小視窗內的網頁對每個主機送出的請求標頭（其他分頁一律不記錄）；加入下載時存成快照，由背景下載器以 `declarativeNetRequest` 原樣帶上，所以之後換頁也不影響。
 - 播放清單的解析由網頁本身的 content script 以網頁身分進行。
 - 「全部下載」的圖片由背景以網頁身分抓取（沒有記錄到標頭的主機至少帶上網頁的 Referer，需要 Referer 才能讀取的圖片主機因此也能下載），個別失敗的圖片不影響其他張，完成後顯示失敗張數。
 - 一般檔案先交給 Chrome 下載（直接寫入磁碟，帶 Cookie 與自訂標頭）；Chrome 下載無法帶 Referer，若伺服器因此拒絕，會自動改由背景以網頁身分重抓，並支援以 Range 從中斷處續傳。
@@ -83,8 +83,8 @@ Chrome 擴充功能（Manifest V3）：偵測網頁中播放的影片、音訊�
 | 檔案 | 角色 |
 | --- | --- |
 | `background.js` | Service worker：開啟小視窗與框架標頭規則、偵測媒體、記錄請求身分、播放清單解析預覽、下載佇列（`storage.session`）與身分規則 |
-| `content.js` | 回報頁面中的 `<video>`／`<audio>` 來源、`<img>` 圖片（含尺寸）與頁面標題；轉接 MSE 攔截腳本並組成捕捉的檔案；以網頁身分抓取播放清單 |
-| `inject/mse-hook.js` | 在頁面環境中攔截 `addSourceBuffer`／`appendBuffer` 保存緩衝資料，並驅動播放器加速緩衝 |
+| `content.js` | 只在小視窗內的框架運作：回報頁面中的 `<video>`／`<audio>` 來源、`<img>` 圖片（含尺寸）與頁面標題；轉接 MSE 攔截腳本並組成捕捉的檔案；以網頁身分抓取播放清單 |
+| `inject/mse-hook.js` | 只在小視窗內的框架運作：在頁面環境中攔截 `addSourceBuffer`／`appendBuffer` 保存緩衝資料，並驅動播放器加速緩衝 |
 | `offscreen/` | 背景下載器：以網頁身分抓取整檔、一批圖片、HLS 或 DASH 片段，可暫停，組成 Blob 後交給 Chrome 存檔 |
 | `viewer/` | 小視窗：網址列、內嵌網頁、媒體清單與下載中佇列；為每個捕捉開幕後框架 |
 | `lib/media.js` | 媒體與圖片分類、大小、檔名 |

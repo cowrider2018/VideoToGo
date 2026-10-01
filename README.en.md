@@ -53,7 +53,7 @@ As long as a player plays through MediaSource, the data the browser has buffered
 Many sites only hand their videos to their own pages: they check cookies (including SameSite), Referer and Origin, or custom headers the player adds, such as `Authorization`.
 
 - Chrome treats a site framed in the window as first-party, so cookies work as usual. `X-Frame-Options` and `Content-Security-Policy` are removed only for frames inside the window, so that sites can be framed.
-- The request headers the page sends to each host are recorded. When a download is added, a snapshot is taken and the background downloader sends the same headers through `declarativeNetRequest`, so moving to another page afterwards makes no difference.
+- The request headers the page in the viewer sends to each host are recorded (other tabs never are). When a download is added, a snapshot is taken and the background downloader sends the same headers through `declarativeNetRequest`, so moving to another page afterwards makes no difference.
 - Playlists are read by the page's own content script, as the page.
 - Images from "Download all" are fetched in the background as the page (hosts with no recorded headers at least get the page's Referer, so image hosts that need a Referer can be downloaded from too). An image that fails does not affect the others, and the number that failed is shown at the end.
 - Ordinary files are first handed to Chrome's downloads (written straight to disk, with cookies and custom headers). Chrome's downloads cannot send a Referer; if the server refuses because of that, the file is fetched again in the background as the page, resuming from where it stopped with Range requests.
@@ -83,8 +83,8 @@ Requires Chrome 116 or later.
 | File | Role |
 | --- | --- |
 | `background.js` | Service worker: opens the window and its frame header rules, detects media, records request identity, previews playlists, keeps the download queue (`storage.session`) and the identity rules |
-| `content.js` | Reports `<video>`/`<audio>` sources, `<img>` images (with dimensions) and the page title; bridges the MSE hook and assembles captured files; fetches playlists as the page |
-| `inject/mse-hook.js` | In the page's own world, intercepts `addSourceBuffer`/`appendBuffer` to keep the buffered data, and drives the player to buffer quickly |
+| `content.js` | Active only in frames inside the viewer: reports `<video>`/`<audio>` sources, `<img>` images (with dimensions) and the page title; bridges the MSE hook and assembles captured files; fetches playlists as the page |
+| `inject/mse-hook.js` | Active only in frames inside the viewer: in the page's own world, intercepts `addSourceBuffer`/`appendBuffer` to keep the buffered data, and drives the player to buffer quickly |
 | `offscreen/` | Background downloader: fetches whole files, batches of images, and HLS or DASH segments as the page, pausably, and hands the assembled Blob to Chrome to save |
 | `viewer/` | The window: address bar, framed page, media list and download queue; opens a hidden frame for each capture |
 | `lib/media.js` | Classifying media and images, sizes, file names |

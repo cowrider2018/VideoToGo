@@ -4,7 +4,11 @@
 //  3. fetches playlists for probing *as the page*: same origin, cookies and referer as the
 //     player's own requests, so sites that check who is asking still answer;
 //  4. reports the title of the page framed in the viewer window.
+// Only inside the viewer window: in any other tab it does nothing.
 (() => {
+  const ancestors = [...(location.ancestorOrigins || [])];
+  if (ancestors.at(-1) !== new URL(chrome.runtime.getURL('')).origin) return;
+
   const send = (msg) => {
     try {
       return chrome.runtime.sendMessage(msg).catch(() => {});
@@ -240,11 +244,7 @@
 
   // ---- Title of the page shown in the viewer --------------------------------------------
 
-  const inViewer =
-    window !== window.top &&
-    window.parent === window.top &&
-    location.ancestorOrigins?.[0]?.startsWith('chrome-extension://');
-  if (inViewer) {
+  if (ancestors.length === 1) {
     // The viewer's page frame and its capture frames alike: say which (the iframe's name, read
     // before the page's own scripts could change it) as the page starts, and when it is in.
     send({ type: 'frame-role', name: window.name, url: location.href });
