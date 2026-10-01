@@ -60,6 +60,8 @@ Many sites only hand their videos to their own pages: they check cookies (includ
 
 ## Installation
 
+Requires Chrome 116 or later.
+
 1. Open `chrome://extensions` and turn on "Developer mode" in the top-right corner.
 2. Click "Load unpacked" and choose this folder.
 
