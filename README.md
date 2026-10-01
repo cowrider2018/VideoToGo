@@ -1,4 +1,4 @@
-# Video Downloader
+# VideoToGo
 
 [English](README.en.md) | 繁體中文
 

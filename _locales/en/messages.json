@@ -1,6 +1,6 @@
 {
   "extName": {
-    "message": "Video Downloader"
+    "message": "VideoToGo"
   },
   "extDescription": {
     "message": "Detects the videos, audio, HLS/DASH streams and images a web page plays or shows, and downloads them."

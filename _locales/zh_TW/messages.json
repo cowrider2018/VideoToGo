@@ -1,6 +1,6 @@
 {
   "extName": {
-    "message": "Video Downloader"
+    "message": "VideoToGo"
   },
   "extDescription": {
     "message": "偵測網頁中播放的影片、音訊、HLS／DASH 串流與圖片並下載。"
