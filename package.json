@@ -6,7 +6,8 @@
   "description": "Chrome extension that detects videos on web pages and downloads them.",
   "scripts": {
     "test": "node --test",
-    "pack": "node scripts/pack.js"
+    "pack": "node scripts/pack.js",
+    "screenshots": "python scripts/screenshots/demo.py && node scripts/screenshots/capture.mjs en && node scripts/screenshots/capture.mjs zh-TW && python scripts/screenshots/compose.py"
   },
   "license": "MIT"
 }

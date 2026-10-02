@@ -102,4 +102,5 @@ Requires Chrome 116 or later.
 ```sh
 npm test        # unit tests (node --test)
 npm run pack    # build dist/videotogo-<version>.zip for the Chrome Web Store
+npm run screenshots  # build the store screenshots into dist/store-screenshots/ (see scripts/screenshots/README.md)
 ```
