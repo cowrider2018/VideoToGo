@@ -14,8 +14,8 @@ Text to paste into the Chrome Web Store developer dashboard. Keep it in step wit
 - **Languages / 語言**: English, 中文（繁體）. The name and short description come from `_locales/`.
 - **Small promo tile / 小型宣傳圖塊 (440×280)**: `store/promo-small-en.png`, `store/promo-small-zh_TW.png`
 - **Screenshots / 螢幕截圖 (1280×800)**: `npm run screenshots` builds them into `dist/store-screenshots/en/` and `dist/store-screenshots/zh_TW/`, four each (open, list, downloads, images); upload each set under its language. Not versioned. 不納入版本控制；各語言上傳到對應的商店資訊語言。
-- **Homepage / 首頁網址**: <https://github.com/cowrider2018/video-downloader>
-- **Support / 支援網址**: <https://github.com/cowrider2018/video-downloader/issues>
+- **Homepage / 首頁網址**: <https://github.com/cowrider2018/VideoToGo>
+- **Support / 支援網址**: <https://github.com/cowrider2018/VideoToGo/issues>
 
 ### Detailed description (English)
 
@@ -123,7 +123,7 @@ Check all three certifications / 三項聲明全部勾選：
 
 ### Privacy policy URL / 隱私權政策網址
 
-<https://github.com/cowrider2018/video-downloader/blob/chromewebstore/PRIVACY.md>
+<https://github.com/cowrider2018/VideoToGo/blob/chromewebstore/PRIVACY.md>
 
 `chromewebstore` is the release branch: it leaves YouTube out, `main` does not, so the policy lives here. The link works once the branch is pushed. `chromewebstore` 是上架分支（排除 YouTube，`main` 沒有），政策放在這裡；push 之後網址才會生效。
 

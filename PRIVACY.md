@@ -41,7 +41,7 @@ The extension does not detect or download content from YouTube.
 
 ### Contact
 
-Questions about this policy: <https://github.com/cowrider2018/video-downloader/issues>
+Questions about this policy: <https://github.com/cowrider2018/VideoToGo/issues>
 
 ## 繁體中文
 
@@ -80,4 +80,4 @@ VideoToGo 不收集、不販售，也不分享任何使用者資料。本擴充�
 
 ### 聯絡
 
-對本政策有疑問，請至：<https://github.com/cowrider2018/video-downloader/issues>
+對本政策有疑問，請至：<https://github.com/cowrider2018/VideoToGo/issues>
