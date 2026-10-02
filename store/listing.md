@@ -129,18 +129,13 @@ Check all three certifications / 三項聲明全部勾選：
 
 ## Notes for the reviewer / 給審查員的說明
 
-Paste into the "Test instructions" field. 貼到「測試操作說明」欄位。
+Paste into the "Test instructions" field (500 characters at most). 貼到「測試操作說明」欄位（上限 500 字元）。
 
 ```text
-No account or credentials are needed.
+No login needed.
+1. Click the toolbar icon to open the VideoToGo window.
+2. In its address bar, open https://www.w3schools.com/html/html5_video.asp (MP4) or https://hlsjs.video-dev.org/demo/ (HLS).
+3. Detected media is listed below the page. Click Download.
 
-1. Click the toolbar icon. The VideoToGo window opens with the current tab's address.
-2. Type a page with a video into the window's address bar and press Enter, for example:
-   - https://www.w3schools.com/html/html5_video.asp (an MP4 file)
-   - https://hlsjs.video-dev.org/demo/ (an HLS stream)
-3. Detected items appear in the list under the page. Click Download on one; it appears under Downloads and is saved to the download folder.
-
-About the header changes: X-Frame-Options and Content-Security-Policy are removed only for sub-frames of the VideoToGo window's own tab (declarativeNetRequest session rule with tabIds set to that tab), so the user's chosen site can be shown inside the window. No other tab is affected, and the rule is removed when the window closes.
-
-The extension records nothing from tabs outside the VideoToGo window. YouTube is excluded: nothing is detected or downloaded from YouTube or its video hosts, including embedded players.
+X-Frame-Options and CSP are removed only for sub-frames of the VideoToGo window's own tab, so sites can be shown in it. Other tabs are untouched and nothing is recorded from them. YouTube is excluded.
 ```
