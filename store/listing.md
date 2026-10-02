@@ -123,9 +123,9 @@ Check all three certifications / 三項聲明全部勾選：
 
 ### Privacy policy URL / 隱私權政策網址
 
-<https://github.com/cowrider2018/video-downloader/blob/main/PRIVACY.md>
+<https://github.com/cowrider2018/video-downloader/blob/chromewebstore/PRIVACY.md>
 
-This link works once `PRIVACY.md` is on `main`. 合併到 `main` 之後，這個網址才會生效。
+`chromewebstore` is the release branch: it leaves YouTube out, `main` does not, so the policy lives here. The link works once the branch is pushed. `chromewebstore` 是上架分支（排除 YouTube，`main` 沒有），政策放在這裡；push 之後網址才會生效。
 
 ## Notes for the reviewer / 給審查員的說明
 
