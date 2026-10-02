@@ -13,7 +13,7 @@ Text to paste into the Chrome Web Store developer dashboard. Keep it in step wit
 - **Category / 類別**: Tools
 - **Languages / 語言**: English, 中文（繁體）. The name and short description come from `_locales/`.
 - **Small promo tile / 小型宣傳圖塊 (440×280)**: `store/promo-small-en.png`, `store/promo-small-zh_TW.png`
-- **Screenshots / 螢幕截圖 (1280×800)**: not made yet / 尚未製作
+- **Screenshots / 螢幕截圖 (1280×800)**: `dist/store-screenshots/en/` and `dist/store-screenshots/zh_TW/`, four each (open, list, downloads, images); upload each set under its language. Not versioned. 不納入版本控制；各語言上傳到對應的商店資訊語言。
 - **Homepage / 首頁網址**: <https://github.com/cowrider2018/video-downloader>
 - **Support / 支援網址**: <https://github.com/cowrider2018/video-downloader/issues>
 
