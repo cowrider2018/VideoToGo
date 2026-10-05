@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { identityHeaders, pageHeaders } from '../lib/headers.js';
+import { identityHeaders, pageHeaders, rememberHost } from '../lib/headers.js';
 
 const sent = [
   { name: 'Host', value: 'cdn.example.com' },
@@ -34,4 +34,15 @@ test('pageHeaders leaves out what fetch() cannot set', () => {
     'x-token': 't0k',
     accept: '*/*',
   });
+});
+
+test('rememberHost keeps the hosts that changed last, up to the limit', () => {
+  const ids = {};
+  assert.equal(rememberHost(ids, 'a.example', { cookie: '1' }, 2), true);
+  assert.equal(rememberHost(ids, 'b.example', { cookie: '2' }, 2), true);
+  assert.equal(rememberHost(ids, 'a.example', { cookie: '1' }, 2), false);
+  // a changes again, so b is now the oldest and makes way for c.
+  rememberHost(ids, 'a.example', { cookie: '3' }, 2);
+  rememberHost(ids, 'c.example', { cookie: '4' }, 2);
+  assert.deepEqual(ids, { 'a.example': { cookie: '3' }, 'c.example': { cookie: '4' } });
 });

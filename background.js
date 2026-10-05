@@ -1,4 +1,4 @@
-import { identityHeaders, pageHeaders } from './lib/headers.js';
+import { identityHeaders, pageHeaders, rememberHost } from './lib/headers.js';
 import { parseMpd, repExt } from './lib/dash.js';
 import { parsePlaylist } from './lib/hls.js';
 import { t } from './lib/i18n.js';
@@ -132,6 +132,9 @@ async function navigated(tabId, url, frameId) {
 
 const identities = new Map(); // tabId -> { [host]: headers }
 
+// Hosts remembered per tab; more than enough for the page on show.
+const MAX_HOSTS = 300;
+
 async function identityOf(tabId) {
   if (!identities.has(tabId)) {
     const { [idsKey(tabId)]: stored = {} } = await chrome.storage.session.get(idsKey(tabId));
@@ -143,9 +146,7 @@ async function identityOf(tabId) {
 async function rememberIdentity(tabId, url, headers) {
   const host = new URL(url).hostname;
   const ids = await identityOf(tabId);
-  if (JSON.stringify(ids[host]) === JSON.stringify(headers)) return;
-  ids[host] = headers;
-  chrome.storage.session.set({ [idsKey(tabId)]: ids });
+  if (rememberHost(ids, host, headers, MAX_HOSTS)) chrome.storage.session.set({ [idsKey(tabId)]: ids });
 }
 
 // The identity a download of `item` should present, per host: the media's own request
