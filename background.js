@@ -363,8 +363,17 @@ async function probe(tabId, item) {
 //   images  every image of a page, fetched by the offscreen document and saved one by one;
 //   mse     the page's own player buffering the whole video, captured in the page.
 
+// A job that has ended keeps only what its row shows. The identity snapshot (every host the
+// tab has talked to), the media record and the file list would otherwise ride along on every
+// read and write of the queue, which happen several times a second.
+function lighten(job) {
+  if (!['done', 'failed', 'cancelled'].includes(job.status)) return job;
+  const { identity, item, files, blobUrls, ...rest } = job;
+  return rest;
+}
+
 const patchJob = (id, patch) =>
-  update(JOBS, (jobs = []) => jobs.map((j) => (j.id === id ? { ...j, ...patch } : j)));
+  update(JOBS, (jobs = []) => jobs.map((j) => (j.id === id ? lighten({ ...j, ...patch }) : j)));
 
 async function findJob(pred) {
   const { [JOBS]: jobs = [] } = await chrome.storage.session.get(JOBS);
@@ -632,7 +641,9 @@ async function settleImages(id) {
       if (j.id !== id || j.status !== 'saving') return j;
       settled = true;
       const failedCount = job.failedCount + lost;
-      return saved ? { ...j, status: 'done', failedCount } : { ...j, status: 'failed', error: t('errImagesUnsaved'), failedCount };
+      return lighten(
+        saved ? { ...j, status: 'done', failedCount } : { ...j, status: 'failed', error: t('errImagesUnsaved'), failedCount },
+      );
     }),
   );
   if (settled) finishJob(job);
@@ -727,7 +738,9 @@ chrome.downloads.onChanged.addListener(async (delta) => {
   // An image that failed to save is counted, not a reason to stop the rest.
   if (job.kind === 'images') return void settleImages(job.id);
   if (state === 'complete') {
-    await patchJob(job.id, { status: 'done' });
+    // The viewer only follows native downloads while they run; the finished row shows this.
+    const [d] = job.kind === 'native' ? await chrome.downloads.search({ id: delta.id }) : [];
+    await patchJob(job.id, d ? { status: 'done', bytes: d.fileSize || d.bytesReceived } : { status: 'done' });
   } else if (job.kind === 'native' && /^SERVER_/.test(delta.error?.current || '')) {
     chrome.downloads.erase({ id: delta.id }).catch(() => {});
     retryAsPage(job).catch((e) => failJob(job.id, e.message));
@@ -796,7 +809,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   update(JOBS, (jobs = []) =>
     jobs.map((j) =>
       j.kind === 'mse' && j.tabId === tabId && ['queued', 'running', 'paused'].includes(j.status)
-        ? { ...j, status: 'failed', error: t('errViewerClosed') }
+        ? lighten({ ...j, status: 'failed', error: t('errViewerClosed') })
         : j,
     ),
   );

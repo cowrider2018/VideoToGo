@@ -377,10 +377,11 @@ function jobRow(j) {
 const renderJobRows = makeRenderer(jobList, t('noDownloads'));
 const renderJobs = () => renderJobRows(jobs.map(jobRow));
 
+// Only downloads still going: the whole download history grows with every file saved.
 async function pollNative() {
-  const active = jobs.filter((j) => j.kind === 'native' && j.downloadId != null);
+  const active = jobs.filter((j) => j.kind === 'native' && j.downloadId != null && ['running', 'paused'].includes(j.status));
   if (!active.length) return;
-  const items = await chrome.downloads.search({});
+  const items = await chrome.downloads.search({ state: 'in_progress' });
   const byId = new Map(items.map((d) => [d.id, d]));
   for (const j of active) {
     const d = byId.get(j.downloadId);
