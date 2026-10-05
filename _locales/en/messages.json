@@ -190,6 +190,12 @@
   "paused": {
     "message": "Paused"
   },
+  "offline": {
+    "message": "Connection lost; resumes when back online"
+  },
+  "retry": {
+    "message": "Retry"
+  },
   "waiting": {
     "message": "Queued"
   },

@@ -8,6 +8,9 @@ const running = new Map(); // job id -> { controller, gate, cancelled, blobUrls 
 
 const post = (msg) => chrome.runtime.sendMessage({ target: 'background', ...msg }).catch(() => {});
 
+// The service worker has no online event; stalled downloads should not wait for its next try.
+addEventListener('online', () => post({ type: 'network-online' }));
+
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.target !== 'offscreen') return;
   if (msg.type === 'job-start') run(msg.job);
@@ -29,10 +32,11 @@ chrome.runtime.onMessage.addListener((msg) => {
 });
 
 async function run(job) {
-  const state = { controller: new AbortController(), gate: makeGate(), cancelled: false, blobUrls: [] };
+  // A dropped connection holds the job where it is; the worker resumes it once back online.
+  const gate = makeGate({ onStall: () => post({ type: 'job-stalled', id: job.id }) });
+  const state = { controller: new AbortController(), gate, cancelled: false, blobUrls: [] };
   running.set(job.id, state);
   const { signal } = state.controller;
-  const { gate } = state;
 
   const hosts = new Set();
   const beforeFetch = async (urls) => {
@@ -77,7 +81,7 @@ async function run(job) {
       await beforeFetch([job.url]);
       blob = await fetchFile(job.url, { fetchImpl, signal, onProgress, gate });
     } else {
-      const fetchBytes = makeFetchBytes({ signal, fetchImpl });
+      const fetchBytes = makeFetchBytes({ signal, fetchImpl, gate });
       const options = { fetchBytes, signal, onProgress, beforeFetch, gate };
       ({ blob, ext } =
         job.kind === 'dash' ? await runDashJob(job.url, job.repId, options) : await runHlsJob(job.url, options));

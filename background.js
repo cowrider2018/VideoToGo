@@ -375,6 +375,8 @@ async function probe(tabId, item) {
 //   dash    one representation of a DASH stream, likewise;
 //   images  every image of a page, fetched by the offscreen document and saved one by one;
 //   mse     the page's own player buffering the whole video, captured in the page.
+// A download whose connection drops is "offline": it keeps what it has and carries on when the
+// network is back (see retryOffline). Only the player's own capture handles that by itself.
 
 // A job that has ended keeps only what its row shows. The identity snapshot (every host the
 // tab has talked to), the media record and the file list would otherwise ride along on every
@@ -384,6 +386,9 @@ function lighten(job) {
   const { identity, item, files, blobUrls, ...rest } = job;
   return rest;
 }
+
+// Started and not yet ended (a queued capture has not started).
+const UNFINISHED = ['running', 'paused', 'offline', 'saving'];
 
 const patchJob = (id, patch) =>
   update(JOBS, (jobs = []) => jobs.map((j) => (j.id === id ? lighten({ ...j, ...patch }) : j)));
@@ -432,11 +437,17 @@ async function runInOffscreen(job, item) {
   });
 }
 
+function startNative(item, filename) {
+  const headers = Object.entries(pageHeaders(item.headers)).map(([name, value]) => ({ name, value }));
+  const start = (h) => chrome.downloads.download({ url: item.url, filename, conflictAction: 'uniquify', headers: h });
+  // A header the downloads API considers unsafe makes it refuse outright; go without them.
+  return start(headers).catch(() => start([]));
+}
+
 async function downloadFile({ tabId, mediaId, filename }) {
   const item = await findMedia(tabId, mediaId);
   if (!item) throw new Error(t('errMediaGone'));
   if (await fromBlocked(tabId, item.url)) throw new Error(t('siteBlocked'));
-  const headers = Object.entries(pageHeaders(item.headers)).map(([name, value]) => ({ name, value }));
   const job = await newJob({
     kind: 'native',
     tabId,
@@ -446,11 +457,8 @@ async function downloadFile({ tabId, mediaId, filename }) {
     item,
     identity: await snapshotIdentity(tabId, item),
   });
-  const start = (h) => chrome.downloads.download({ url: item.url, filename, conflictAction: 'uniquify', headers: h });
   try {
-    // A header the downloads API considers unsafe makes it refuse outright; go without them.
-    const downloadId = await start(headers).catch(() => start([]));
-    await patchJob(job.id, { downloadId });
+    await patchJob(job.id, { downloadId: await startNative(item, filename) });
   } catch (e) {
     await failJob(job.id, e.message);
   }
@@ -678,7 +686,7 @@ async function finishJob(job) {
     toOffscreen({ type: 'release', id: job.id });
   }
   const { [JOBS]: jobs = [] } = await chrome.storage.session.get(JOBS);
-  const busy = jobs.some((j) => ['file', 'hls', 'dash', 'images'].includes(j.kind) && ['running', 'paused', 'saving'].includes(j.status));
+  const busy = jobs.some((j) => ['file', 'hls', 'dash', 'images'].includes(j.kind) && UNFINISHED.includes(j.status));
   if (!busy) chrome.offscreen.closeDocument().catch(() => {});
 }
 
@@ -708,12 +716,13 @@ async function pauseJob(id) {
   }
 }
 
+// Also retries an offline download straight away.
 async function resumeJob(id) {
   const job = await findJob((j) => j.id === id);
-  if (job?.status !== 'paused') return;
+  if (job?.status !== 'paused' && job?.status !== 'offline') return;
   await patchJob(id, { status: 'running' });
   if (job.kind === 'native') {
-    if (job.downloadId != null) chrome.downloads.resume(job.downloadId).catch(() => {});
+    if (job.downloadId != null) reconnectNative(job).catch(() => goOffline(id));
   } else if (job.kind === 'mse') {
     toPage(job, { type: 'mse-resume' });
   } else {
@@ -721,14 +730,54 @@ async function resumeJob(id) {
   }
 }
 
+// ---- Lost connections -----------------------------------------------------------------
+// A download whose connection dropped waits as "offline" and is retried when a page sees the
+// network come back, or every half minute while the browser believes it is online. The
+// alarm wakes this worker if it has been shut down meanwhile.
+
+const RECONNECT = 'reconnect';
+
+// What chrome.downloads reports when the network, not the server or the disk, gave out.
+const NETWORK_LOST = /^NETWORK_(FAILED|TIMEOUT|DISCONNECTED|SERVER_DOWN)$/;
+
+async function goOffline(id) {
+  let went = false;
+  await update(JOBS, (jobs = []) => {
+    if (!jobs.some((j) => j.id === id && j.status === 'running')) return undefined;
+    went = true;
+    return jobs.map((j) => (j.id === id ? { ...j, status: 'offline' } : j));
+  });
+  if (went && !(await chrome.alarms.get(RECONNECT))) chrome.alarms.create(RECONNECT, { periodInMinutes: 0.5 });
+}
+
+async function retryOffline() {
+  const { [JOBS]: jobs = [] } = await chrome.storage.session.get(JOBS);
+  const offline = jobs.filter((j) => j.status === 'offline');
+  if (!offline.length) return void chrome.alarms.clear(RECONNECT);
+  if (!navigator.onLine) return;
+  for (const job of offline) resumeJob(job.id);
+}
+
+// Chrome carries a native download on from where it stopped when it can; otherwise (nothing
+// was received yet, or the server cannot tell it is the same file) it starts over.
+async function reconnectNative(job) {
+  const [d] = await chrome.downloads.search({ id: job.downloadId });
+  if (d?.canResume) return chrome.downloads.resume(d.id);
+  if (d) chrome.downloads.erase({ id: d.id }).catch(() => {});
+  await patchJob(job.id, { downloadId: await startNative(job.item, job.filename) });
+}
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === RECONNECT) retryOffline();
+});
+
 // Removes a job from the queue, cancelling it first if it is still going (the partial data
 // goes with it). A finished file stays on disk.
 async function deleteJob(id) {
   const job = await findJob((j) => j.id === id);
   if (!job) return;
   await update(JOBS, (jobs = []) => jobs.filter((j) => j.id !== id));
-  const unfinished = ['running', 'paused', 'saving'].includes(job.status);
-  if (!unfinished) return;
+  if (!UNFINISHED.includes(job.status)) return;
   for (const d of job.downloadIds || (job.downloadId != null ? [job.downloadId] : [])) {
     await chrome.downloads.cancel(d).catch(() => {});
     chrome.downloads.erase({ id: d }).catch(() => {});
@@ -767,6 +816,9 @@ chrome.downloads.onChanged.addListener(async (delta) => {
   } else if (job.kind === 'native' && /^SERVER_/.test(delta.error?.current || '')) {
     chrome.downloads.erase({ id: delta.id }).catch(() => {});
     retryAsPage(job).catch((e) => failJob(job.id, e.message));
+    return;
+  } else if (job.kind === 'native' && NETWORK_LOST.test(delta.error?.current || '')) {
+    await goOffline(job.id);
     return;
   } else {
     await failJob(job.id, delta.error?.current || t('errSaveInterrupted'));
@@ -954,7 +1006,7 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
     case 'job-progress':
       update(JOBS, (jobs = []) =>
         jobs.map((j) =>
-          j.id === msg.id && ['running', 'paused'].includes(j.status)
+          j.id === msg.id && ['running', 'paused', 'offline'].includes(j.status)
             ? { ...j, done: msg.done, total: msg.total, bytes: msg.bytes }
             : j,
         ),
@@ -965,6 +1017,12 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
       return;
     case 'job-failed':
       onJobFailed(msg);
+      return;
+    case 'job-stalled':
+      goOffline(msg.id);
+      return;
+    case 'network-online':
+      retryOffline();
       return;
   }
 });

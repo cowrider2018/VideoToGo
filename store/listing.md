@@ -90,6 +90,7 @@ Detect the videos, audio, streams and images on a web page the user opens in the
 | Permission | Justification |
 | --- | --- |
 | `downloads` | Saves the files the user chooses to download, and pauses, resumes, cancels and shows them from the extension's download list. |
+| `alarms` | While a download is waiting out a lost network connection, a 30-second alarm wakes the service worker to try it again. The alarm is cleared as soon as no download is waiting. |
 | `storage` | `chrome.storage.session` holds the media detected in the VideoToGo window and the download queue, so they survive service worker restarts. Nothing is stored persistently. |
 | `scripting` | Registers the MSE capture script while the VideoToGo window is open. It runs only in frames inside that window, and lets the user save videos that play from `blob:` URLs. |
 | `offscreen` | An offscreen document downloads HLS/DASH segments and images, joins them into one file and hands it to `chrome.downloads`. A service worker cannot create the `blob:` URL this needs. |
