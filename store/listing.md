@@ -34,6 +34,7 @@ What it can download
 Built for sites that are hard to download from
 • Downloads use the same cookies, referrer and headers as the page, so sites that only serve video to their own pages still work
 • Downloads run in the background: pause, resume or cancel them, and keep browsing while they run
+• If the connection drops, a download waits instead of failing and carries on by itself once the network is back, resuming where it stopped when the server allows it
 
 Privacy
 • Works only on pages you open in the VideoToGo window; your other tabs are never read
@@ -64,6 +65,7 @@ VideoToGo 偵測網頁中的影片、音訊、串流與圖片，下載你選擇�
 適合不易下載的網站
 • 下載時帶上與網頁相同的 Cookie、Referer 與標頭，只把影片交給自己網頁的網站也能下載
 • 下載在背景進行，可暫停、繼續、取消，下載時可以繼續瀏覽
+• 網路中斷時下載不會失敗，連線恢復後自動接著下載，伺服器支援時從中斷處續傳
 
 隱私
 • 只作用於你在 VideoToGo 小視窗中開啟的網頁，不讀取其他分頁
