@@ -753,7 +753,6 @@ chrome.downloads.onChanged.addListener(async (delta) => {
     return;
   } else {
     await failJob(job.id, delta.error?.current || t('errSaveInterrupted'));
-    return;
   }
   if (job.kind !== 'native') finishJob(job);
 });
