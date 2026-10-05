@@ -1,5 +1,5 @@
 import { BLOCKED_MATCHES, isBlocked } from './lib/blocked.js';
-import { identityHeaders, pageHeaders } from './lib/headers.js';
+import { identityHeaders, pageHeaders, rememberHost } from './lib/headers.js';
 import { parseMpd, repExt } from './lib/dash.js';
 import { parsePlaylist } from './lib/hls.js';
 import { t } from './lib/i18n.js';
@@ -140,6 +140,9 @@ async function navigated(tabId, url, frameId) {
 
 const identities = new Map(); // tabId -> { [host]: headers }
 
+// Hosts remembered per tab; more than enough for the page on show.
+const MAX_HOSTS = 300;
+
 async function identityOf(tabId) {
   if (!identities.has(tabId)) {
     const { [idsKey(tabId)]: stored = {} } = await chrome.storage.session.get(idsKey(tabId));
@@ -151,9 +154,7 @@ async function identityOf(tabId) {
 async function rememberIdentity(tabId, url, headers) {
   const host = new URL(url).hostname;
   const ids = await identityOf(tabId);
-  if (JSON.stringify(ids[host]) === JSON.stringify(headers)) return;
-  ids[host] = headers;
-  chrome.storage.session.set({ [idsKey(tabId)]: ids });
+  if (rememberHost(ids, host, headers, MAX_HOSTS)) chrome.storage.session.set({ [idsKey(tabId)]: ids });
 }
 
 // The identity a download of `item` should present, per host: the media's own request
@@ -375,8 +376,17 @@ async function probe(tabId, item) {
 //   images  every image of a page, fetched by the offscreen document and saved one by one;
 //   mse     the page's own player buffering the whole video, captured in the page.
 
+// A job that has ended keeps only what its row shows. The identity snapshot (every host the
+// tab has talked to), the media record and the file list would otherwise ride along on every
+// read and write of the queue, which happen several times a second.
+function lighten(job) {
+  if (!['done', 'failed', 'cancelled'].includes(job.status)) return job;
+  const { identity, item, files, blobUrls, ...rest } = job;
+  return rest;
+}
+
 const patchJob = (id, patch) =>
-  update(JOBS, (jobs = []) => jobs.map((j) => (j.id === id ? { ...j, ...patch } : j)));
+  update(JOBS, (jobs = []) => jobs.map((j) => (j.id === id ? lighten({ ...j, ...patch }) : j)));
 
 async function findJob(pred) {
   const { [JOBS]: jobs = [] } = await chrome.storage.session.get(JOBS);
@@ -649,7 +659,9 @@ async function settleImages(id) {
       if (j.id !== id || j.status !== 'saving') return j;
       settled = true;
       const failedCount = job.failedCount + lost;
-      return saved ? { ...j, status: 'done', failedCount } : { ...j, status: 'failed', error: t('errImagesUnsaved'), failedCount };
+      return lighten(
+        saved ? { ...j, status: 'done', failedCount } : { ...j, status: 'failed', error: t('errImagesUnsaved'), failedCount },
+      );
     }),
   );
   if (settled) finishJob(job);
@@ -730,6 +742,11 @@ async function deleteJob(id) {
   }
 }
 
+// Drops every download that has ended from the queue. Their header rules and blobs are
+// already gone (finishJob), and their files stay on disk.
+const clearFinished = () =>
+  update(JOBS, (jobs = []) => jobs.filter((j) => !['done', 'failed', 'cancelled'].includes(j.status)));
+
 chrome.downloads.onChanged.addListener(async (delta) => {
   const state = delta.state?.current;
   if (state !== 'complete' && state !== 'interrupted') return;
@@ -744,14 +761,15 @@ chrome.downloads.onChanged.addListener(async (delta) => {
   // An image that failed to save is counted, not a reason to stop the rest.
   if (job.kind === 'images') return void settleImages(job.id);
   if (state === 'complete') {
-    await patchJob(job.id, { status: 'done' });
+    // The viewer only follows native downloads while they run; the finished row shows this.
+    const [d] = job.kind === 'native' ? await chrome.downloads.search({ id: delta.id }) : [];
+    await patchJob(job.id, d ? { status: 'done', bytes: d.fileSize || d.bytesReceived } : { status: 'done' });
   } else if (job.kind === 'native' && /^SERVER_/.test(delta.error?.current || '')) {
     chrome.downloads.erase({ id: delta.id }).catch(() => {});
     retryAsPage(job).catch((e) => failJob(job.id, e.message));
     return;
   } else {
     await failJob(job.id, delta.error?.current || t('errSaveInterrupted'));
-    return;
   }
   if (job.kind !== 'native') finishJob(job);
 });
@@ -809,7 +827,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   update(JOBS, (jobs = []) =>
     jobs.map((j) =>
       j.kind === 'mse' && j.tabId === tabId && ['queued', 'running', 'paused'].includes(j.status)
-        ? { ...j, status: 'failed', error: t('errViewerClosed') }
+        ? lighten({ ...j, status: 'failed', error: t('errViewerClosed') })
         : j,
     ),
   );
@@ -924,6 +942,9 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
       return;
     case 'delete-job':
       deleteJob(msg.id);
+      return;
+    case 'clear-finished':
+      clearFinished();
       return;
     case 'identity':
       findJob((j) => j.id === msg.id)

@@ -377,13 +377,23 @@ function jobRow(j) {
   return spec;
 }
 
-const renderJobRows = makeRenderer(jobList, t('noDownloads'));
-const renderJobs = () => renderJobRows(jobs.map(jobRow));
+const ended = (j) => ['done', 'failed', 'cancelled'].includes(j.status);
 
+// Clears every download that has ended from the list in one go; the files stay on disk.
+const clearButton = document.getElementById('clear');
+clearButton.addEventListener('click', () => send({ type: 'clear-finished' }));
+
+const renderJobRows = makeRenderer(jobList, t('noDownloads'));
+function renderJobs() {
+  renderJobRows(jobs.map(jobRow));
+  clearButton.hidden = !jobs.some(ended);
+}
+
+// Only downloads still going: the whole download history grows with every file saved.
 async function pollNative() {
-  const active = jobs.filter((j) => j.kind === 'native' && j.downloadId != null);
+  const active = jobs.filter((j) => j.kind === 'native' && j.downloadId != null && ['running', 'paused'].includes(j.status));
   if (!active.length) return;
-  const items = await chrome.downloads.search({});
+  const items = await chrome.downloads.search({ state: 'in_progress' });
   const byId = new Map(items.map((d) => [d.id, d]));
   for (const j of active) {
     const d = byId.get(j.downloadId);

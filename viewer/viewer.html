@@ -21,7 +21,10 @@
     <div id="captures"></div>
     <ul id="media" class="list"></ul>
     <section id="queue">
-      <h2 data-i18n="queueHeading"></h2>
+      <div id="queue-head">
+        <h2 data-i18n="queueHeading"></h2>
+        <button id="clear" type="button" data-i18n="clearFinished" data-i18n-title="clearFinishedHint" hidden></button>
+      </div>
       <ul id="jobs" class="list"></ul>
     </section>
     <script type="module" src="viewer.js"></script>
