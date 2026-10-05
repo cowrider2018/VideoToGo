@@ -725,6 +725,11 @@ async function deleteJob(id) {
   }
 }
 
+// Drops every download that has ended from the queue. Their header rules and blobs are
+// already gone (finishJob), and their files stay on disk.
+const clearFinished = () =>
+  update(JOBS, (jobs = []) => jobs.filter((j) => !['done', 'failed', 'cancelled'].includes(j.status)));
+
 chrome.downloads.onChanged.addListener(async (delta) => {
   const state = delta.state?.current;
   if (state !== 'complete' && state !== 'interrupted') return;
@@ -924,6 +929,9 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
       return;
     case 'delete-job':
       deleteJob(msg.id);
+      return;
+    case 'clear-finished':
+      clearFinished();
       return;
     case 'identity':
       findJob((j) => j.id === msg.id)

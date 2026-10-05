@@ -22,6 +22,7 @@ Clicking the toolbar icon opens a separate small window (or switches to it if it
 4. **Downloads**: every download you add queues here and shows its own progress.
    - "Pause" keeps what has been downloaded; "Resume" carries on from there.
    - "×" cancels the download and removes it from the list; for a finished item it only removes the entry, and the file stays on disk.
+   - Once any download has ended (finished, failed or cancelled), "Clear finished" appears beside the heading and removes all of them from the list at once; the files stay on disk.
    - Downloads run in the background, so you can move to another page, or open another site and keep adding.
 
 The media list and the downloads section are exactly as tall as their rows; resizing the window only resizes the web page area, which can shrink until it is hidden.

@@ -178,6 +178,12 @@
   "removeFromList": {
     "message": "從清單移除"
   },
+  "clearFinished": {
+    "message": "清除已完成"
+  },
+  "clearFinishedHint": {
+    "message": "從清單移除已完成、失敗與已取消的項目；檔案保留在磁碟上"
+  },
   "paused": {
     "message": "已暫停"
   },

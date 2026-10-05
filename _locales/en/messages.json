@@ -178,6 +178,12 @@
   "removeFromList": {
     "message": "Remove from list"
   },
+  "clearFinished": {
+    "message": "Clear finished"
+  },
+  "clearFinishedHint": {
+    "message": "Remove finished, failed and cancelled downloads from the list; the files stay on disk"
+  },
   "paused": {
     "message": "Paused"
   },

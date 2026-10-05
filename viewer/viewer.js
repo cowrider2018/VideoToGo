@@ -374,8 +374,17 @@ function jobRow(j) {
   return spec;
 }
 
+const ended = (j) => ['done', 'failed', 'cancelled'].includes(j.status);
+
+// Clears every download that has ended from the list in one go; the files stay on disk.
+const clearButton = document.getElementById('clear');
+clearButton.addEventListener('click', () => send({ type: 'clear-finished' }));
+
 const renderJobRows = makeRenderer(jobList, t('noDownloads'));
-const renderJobs = () => renderJobRows(jobs.map(jobRow));
+function renderJobs() {
+  renderJobRows(jobs.map(jobRow));
+  clearButton.hidden = !jobs.some(ended);
+}
 
 // Only downloads still going: the whole download history grows with every file saved.
 async function pollNative() {
