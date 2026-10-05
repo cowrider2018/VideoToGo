@@ -187,6 +187,12 @@
   "paused": {
     "message": "已暫停"
   },
+  "offline": {
+    "message": "連線中斷，恢復後自動繼續"
+  },
+  "retry": {
+    "message": "重試"
+  },
   "waiting": {
     "message": "排隊中"
   },

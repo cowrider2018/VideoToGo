@@ -21,6 +21,7 @@ Clicking the toolbar icon opens a separate small window (or switches to it if it
    - Images fold into a last row, "Images (N)": "Download all" saves every image into a folder named after the page title, and "Expand" lists them one by one (format, dimensions, size) so each can be downloaded on its own.
 4. **Downloads**: every download you add queues here and shows its own progress.
    - "Pause" keeps what has been downloaded; "Resume" carries on from there.
+   - If the network drops, a download does not fail: it shows "Connection lost" and keeps what it has, then carries on by itself once the connection is back (when the browser notices the network return, otherwise every 30 seconds). "Retry" tries again right away. Ordinary files resume from where they stopped when the server allows it, otherwise they start over; HLS/DASH and images do not fetch again what they already have. An MSE capture is buffered by the page's own player, which handles a dropped connection itself.
    - "×" cancels the download and removes it from the list; for a finished item it only removes the entry, and the file stays on disk.
    - Once any download has ended (finished, failed or cancelled), "Clear finished" appears beside the heading and removes all of them from the list at once; the files stay on disk.
    - Downloads run in the background, so you can move to another page, or open another site and keep adding.

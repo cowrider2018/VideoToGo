@@ -338,7 +338,7 @@ function progressText(j) {
 // the queue (or, once finished, just drops the entry; the file stays on disk).
 function jobRow(j) {
   const act = (type) => () => send({ type, id: j.id });
-  const unfinished = ['queued', 'running', 'paused', 'saving'].includes(j.status);
+  const unfinished = ['queued', 'running', 'paused', 'offline', 'saving'].includes(j.status);
   const remove = { text: '×', title: unfinished ? t('cancelAndDelete') : t('removeFromList'), onClick: act('delete-job') };
   const spec = { key: j.id, name: j.filename, title: j.url, meta: [], buttons: [] };
   switch (j.status) {
@@ -349,6 +349,11 @@ function jobRow(j) {
     case 'paused':
       spec.meta = [t('paused'), progressText(j)];
       spec.buttons = [{ text: t('resume'), onClick: act('resume-job') }, remove];
+      break;
+    case 'offline':
+      // Retried by itself once the network is back; the button tries again right now.
+      spec.meta = [t('offline'), progressText(j)];
+      spec.buttons = [{ text: t('retry'), onClick: act('resume-job') }, remove];
       break;
     case 'queued':
       spec.meta = [t('waiting')];
@@ -400,6 +405,9 @@ async function pollNative() {
 }
 
 setInterval(pollNative, 700);
+
+// Downloads that lost their connection need not wait for the worker's next try.
+addEventListener('online', () => send({ type: 'network-online' }).catch(() => {}));
 
 // ---- Startup --------------------------------------------------------------------------
 
